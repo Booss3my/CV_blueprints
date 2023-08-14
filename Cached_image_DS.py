@@ -7,13 +7,19 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 
 
-class Cached_dataset(Dataset):
+class CachedDataset(Dataset):
+    """ 
+    A custom dataset class for caching image data in shared memory.
+    Images are resized and center-cropped according to a given size.
+    Images are loaded on the fly, but only once per image.
+
+    """
 
     def __init__(self, image_paths, labels, size=224):
 
         self.image_paths = image_paths
         self.labels = labels
-        self.Resize_ts = transforms.Compose([
+        self.resize_ts = transforms.Compose([
             transforms.Resize(int(size*1.2)),
             transforms.CenterCrop(size),
         ])
@@ -31,7 +37,7 @@ class Cached_dataset(Dataset):
     def __getitem__(self, index):
         if self.use_cache == False:
             out = torchvision.io.read_image(self.image_paths[index])
-            out = self.Resize_ts(out)/255
+            out = self.resize_ts(out)/255
             self.shared_array[index] = out
         else:
             out = self.shared_array[index]
