@@ -20,7 +20,7 @@ class CachedDataset(Dataset):
         self.image_paths = image_paths
         self.labels = labels
         self.resize_ts = transforms.Compose([
-            transforms.Resize(int(size*1.2)),
+            transforms.Resize(int(size*1.2), antialias=True),
             transforms.CenterCrop(size),
         ])
         # caching (adapt to your needs)
