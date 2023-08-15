@@ -15,7 +15,7 @@ class CachedDataset(Dataset):
 
     """
 
-    def __init__(self, image_paths, labels=None, size=224, transforms=None, cache=True):
+    def __init__(self, image_paths, labels=None, size=224, im_transforms=None, cache=True):
 
         self.image_paths = image_paths
         self.labels = labels
@@ -25,7 +25,7 @@ class CachedDataset(Dataset):
             transforms.Resize(int(size*1.2), antialias=True),
             transforms.CenterCrop(size),
         ])
-        self.transforms = transforms
+        self.im_transforms = im_transforms
 
         if cache:
             self.__init_cache__(size)
@@ -54,8 +54,8 @@ class CachedDataset(Dataset):
         else:
             out = self.shared_array[index]
 
-        if self.transforms is not None:
-            out = self.transforms(out)
+        if self.im_transforms is not None:
+            out = self.im_transforms(out)
 
         if self.labels is None:
             return out
