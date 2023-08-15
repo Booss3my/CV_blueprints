@@ -8,7 +8,7 @@ from PIL import Image
 import albumentations as A
 
 
-class CachedDataset_(Dataset):
+class CachedDataset(Dataset):
     """ 
     A custom dataset class for caching image data in shared memory.
     Images are resized and center-cropped according to a given size.
