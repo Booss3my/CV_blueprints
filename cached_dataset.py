@@ -3,13 +3,12 @@ import torch
 import ctypes
 import numpy as np
 import multiprocessing as mp
-from torchvision import transforms
 from torch.utils.data import Dataset
 from PIL import Image
 import albumentations as A
 
 
-class CachedDataset(Dataset):
+class CachedDataset_(Dataset):
     """ 
     A custom dataset class for caching image data in shared memory.
     Images are resized and center-cropped according to a given size.
@@ -35,11 +34,10 @@ class CachedDataset(Dataset):
     def __init_cache__(self, size):
         # caching (adapt to your needs)
         nb_samples = len(self.image_paths)*size*size*3
-        shared_array_base = mp.Array(ctypes.c_float, nb_samples)
-        shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
-        shared_array = shared_array.reshape(
-            len(self.image_paths), 3, size, size)
-        # self.shared_array = torch.from_numpy(shared_array)
+        shared_array_base = mp.Array(ctypes.c_uint8, nb_samples)
+        self.shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
+        self.shared_array = self.shared_array.reshape(
+            len(self.image_paths), size, size, 3)
 
     def __len__(self):
         return len(self.image_paths)
@@ -48,8 +46,8 @@ class CachedDataset(Dataset):
         if self.use_cache == False or self.cache == False:
             pillow_image = Image.open(self.image_paths[index])
             out = np.array(pillow_image)
-            # out = torchvision.io.read_image(self.image_paths[index])
-            out = self.resize_ts(out)/255
+
+            out = self.resize_ts(image=out)['image']
 
             if self.cache:
                 self.shared_array[index] = out
@@ -57,7 +55,7 @@ class CachedDataset(Dataset):
             out = self.shared_array[index]
 
         if self.tfs is not None:
-            out = self.tfs(out)
+            out = self.tfs(image=out)['image']
 
         if self.labels is None:
             return out
