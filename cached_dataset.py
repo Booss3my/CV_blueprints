@@ -15,7 +15,7 @@ class CachedDataset(Dataset):
 
     """
 
-    def __init__(self, image_paths, labels=None, size=224, im_transforms=None, cache=True):
+    def __init__(self, image_paths, labels=None, size=224, tfs=None, cache=True):
 
         self.image_paths = image_paths
         self.labels = labels
@@ -25,7 +25,7 @@ class CachedDataset(Dataset):
             transforms.Resize(int(size*1.2), antialias=True),
             transforms.CenterCrop(size),
         ])
-        self.im_transforms = im_transforms
+        self.im_transforms = tfs
 
         if cache:
             self.__init_cache__(size)
