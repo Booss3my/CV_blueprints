@@ -5,7 +5,7 @@ import numpy as np
 import multiprocessing as mp
 from torchvision import transforms
 from torch.utils.data import Dataset
-
+from PIL import Image
 
 class CachedDataset(Dataset):
     """ 
@@ -15,7 +15,7 @@ class CachedDataset(Dataset):
 
     """
 
-    def __init__(self, image_paths, labels=None, size=224, cache=True):
+    def __init__(self, image_paths, labels=None, size=224, transforms=None, cache=True):
 
         self.image_paths = image_paths
         self.labels = labels
@@ -25,6 +25,7 @@ class CachedDataset(Dataset):
             transforms.Resize(int(size*1.2), antialias=True),
             transforms.CenterCrop(size),
         ])
+        self.transforms = transforms
 
         if cache:
             self.__init_cache__(size)
@@ -36,14 +37,16 @@ class CachedDataset(Dataset):
         shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
         shared_array = shared_array.reshape(
             len(self.image_paths), 3, size, size)
-        self.shared_array = torch.from_numpy(shared_array)
+        #self.shared_array = torch.from_numpy(shared_array)
 
     def __len__(self):
         return len(self.image_paths)
 
     def __getitem__(self, index):
         if self.use_cache == False or self.cache == False:
-            out = torchvision.io.read_image(self.image_paths[index])
+            pillow_image = Image.open(self.image_paths[index])
+            out = np.array(pillow_image)
+            #out = torchvision.io.read_image(self.image_paths[index])
             out = self.resize_ts(out)/255
 
             if self.cache:
@@ -51,7 +54,9 @@ class CachedDataset(Dataset):
         else:
             out = self.shared_array[index]
 
-        # other transforms
+        if self.transforms is not None:
+            out = self.transforms(out)
+
         if self.labels is None:
             return out
         return out, self.labels[index]
