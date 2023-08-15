@@ -7,6 +7,7 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 from PIL import Image
 
+
 class CachedDataset(Dataset):
     """ 
     A custom dataset class for caching image data in shared memory.
@@ -15,8 +16,10 @@ class CachedDataset(Dataset):
 
     """
 
-    def __init__(self, image_paths, labels=None, size=224, tfs=None, cache=True):
+    def __init__(self, image_paths, labels=None, tfs=None, size=224, cache=True):
         super().__init__()
+
+        self.tfs = tfs
         self.image_paths = image_paths
         self.labels = labels
         self.cache = cache
@@ -25,7 +28,6 @@ class CachedDataset(Dataset):
             transforms.Resize(int(size*1.2), antialias=True),
             transforms.CenterCrop(size),
         ])
-        self.im_transforms = tfs
 
         if cache:
             self.__init_cache__(size)
@@ -37,7 +39,7 @@ class CachedDataset(Dataset):
         shared_array = np.ctypeslib.as_array(shared_array_base.get_obj())
         shared_array = shared_array.reshape(
             len(self.image_paths), 3, size, size)
-        #self.shared_array = torch.from_numpy(shared_array)
+        # self.shared_array = torch.from_numpy(shared_array)
 
     def __len__(self):
         return len(self.image_paths)
@@ -46,7 +48,7 @@ class CachedDataset(Dataset):
         if self.use_cache == False or self.cache == False:
             pillow_image = Image.open(self.image_paths[index])
             out = np.array(pillow_image)
-            #out = torchvision.io.read_image(self.image_paths[index])
+            # out = torchvision.io.read_image(self.image_paths[index])
             out = self.resize_ts(out)/255
 
             if self.cache:
@@ -54,8 +56,8 @@ class CachedDataset(Dataset):
         else:
             out = self.shared_array[index]
 
-        if self.im_transforms is not None:
-            out = self.im_transforms(out)
+        if self.tfs is not None:
+            out = self.tfs(out)
 
         if self.labels is None:
             return out
