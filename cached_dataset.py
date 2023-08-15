@@ -6,6 +6,7 @@ import multiprocessing as mp
 from torchvision import transforms
 from torch.utils.data import Dataset
 from PIL import Image
+import albumentations as A
 
 
 class CachedDataset(Dataset):
@@ -24,10 +25,9 @@ class CachedDataset(Dataset):
         self.labels = labels
         self.cache = cache
         self.use_cache = False
-        self.resize_ts = transforms.Compose([
-            transforms.Resize(int(size*1.2), antialias=True),
-            transforms.CenterCrop(size),
-        ])
+        self.resize_ts = A.Compose([
+            A.SmallestMaxSize(int(size*1.2), p=1.0),
+            A.CenterCrop(size, size, p=1.0)])
 
         if cache:
             self.__init_cache__(size)
