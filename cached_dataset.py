@@ -16,7 +16,7 @@ class CachedDataset(Dataset):
     """
 
     def __init__(self, image_paths, labels=None, size=224, tfs=None, cache=True):
-
+        super().__init__()
         self.image_paths = image_paths
         self.labels = labels
         self.cache = cache
